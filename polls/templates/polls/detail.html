@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<form action="{% url 'polls:vote' question.id %}" method="post">
+    {% csrf_token %}
+    <fieldset>
+        <legend>
+            <h1>{{question.question_text}}</h1>
+        </legend>
+        {% if question.picture %}
+        <div>
+            <img src="{{ question.picture.url }}" alt="Картинка" width="200" height="150">
+        </div>
+        {% endif %}
+        <p>{{question.question_description}}</p>
+        {% if error_message %}<p><strong> {{error_message}}</strong></p>{% endif %}
+        {% for choice in question.choice_set.all %}
+        <input type="radio" name="choice" id="choice{{forloop.counter}}" value="{{choice.id}}">
+        <label for="choice{{forloop.counter}}">{{choice.choice_text}}</label><br>
+        {% endfor %}
+    </fieldset>
+<input type="submit" value="Vote">
+</form>
+{% endblock content %}

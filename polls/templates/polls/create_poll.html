@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Создать опрос</h2>
+
+<form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <h3>Вопрос:</h3>
+    {{ poll_form.as_p }}
+
+    <h3>Варианты ответов:</h3>
+    {{ choice_form.management_form }}
+    {% for form in choice_form %}
+        <div class="choice-form">
+            {{ form.choice_text.label_tag }}
+            {{ form.choice_text }}
+        </div>
+    {% endfor %}
+
+    <button type="submit">Создать</button>
+</form>
+{% endblock %}

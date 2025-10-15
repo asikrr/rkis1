@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block title %}Опросы{% endblock %}
+{% block content %}
+{% if user.is_authenticated %}
+    <h2>Доступные опросы</h2>
+    <a href="{% url 'polls:create_poll' %}">Добавить опрос</a>
+    {% if latest_question_list %}
+    <ul>
+        {% for question in latest_question_list %}
+        <li><a href="{% url 'polls:detail' question.id %}">{{question.question_text}}</a>
+            <p style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100px;">
+                {{question.question_description}}</p>
+        </li>
+        {% endfor %}
+    </ul>
+        {% else %}
+         <p>
+             Нет вопросов!
+         </p>
+
+    {% endif %}
+{% else %}
+<h1>Пройдите регистрацию, чтобы проходить опросы</h1>
+<a href="{% url 'polls:registration' %}">Зарегистрироваться</a>
+<p>Уже зарегистрированы?</p>
+<a href="{% url 'polls:login' %}">Войти</a>
+{% endif %}
+{% endblock content %}

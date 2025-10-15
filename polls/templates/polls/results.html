@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>{{ question.question_text }}</h1>
+<ul>
+    {% for item in choices_with_percent %}
+        <li style="
+            {% if user_choice_id and item.choice.id == user_choice_id %}
+                color: green;
+            {% endif %}">
+            {{ item.choice.choice_text }} --
+            {{ item.votes }} vote{{ item.votes|pluralize }} ({{ item.percent }}%)
+        </li>
+    {% endfor %}
+</ul>
+<a href="{% url 'polls:detail' question.id %}">выбрать еще раз?</a>
+{% endblock content %}

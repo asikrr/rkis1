@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block title %}Профиль{% endblock %}
+
+{% block content %}
+<h2>Редактировать профиль</h2>
+
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" name="save_profile">Сохранить изменения</button>
+</form>
+
+<hr>
+
+<form method="post">
+    {% csrf_token %}
+    <button
+        type="submit"
+        name="delete_account"
+        onclick="return confirm('Вы уверены, что хотите удалить аккаунт?');"
+    >
+        Удалить аккаунт
+    </button>
+</form>
+
+{% endblock %}
