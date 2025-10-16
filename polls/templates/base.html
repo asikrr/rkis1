@@ -10,7 +10,7 @@
             <a href="{% url 'polls:index' %}">Главная</a>
             <div>
                 {% if user.is_authenticated %}
-                    <img src="{{ user.avatar.url }}" alt="Аватар" width="40" height="40" style="border-radius: 50%;">
+                    <img src="{{ user.avatar.url }}" alt="Аватар" width="100" height="100" style="border-radius: 50%;">
                     <p>{{ user.username }}</p>
                     <a href="{% url 'polls:profile' %}">Профиль</a>
                     <form method="post" action="{% url 'polls:logout' %}" style="display: inline;">

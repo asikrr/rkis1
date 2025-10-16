@@ -1,16 +1,14 @@
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth import login
 from django.contrib.auth import logout
-from django.http import HttpResponseRedirect
 from django.shortcuts import redirect
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from datetime import timedelta
 
-from .forms import RegistrationForm, PollForm, ChoiceForm
-from .forms import ProfileUpdateForm
+from .forms import RegistrationForm, PollForm, ChoiceForm, ProfileUpdateForm
 from .models import Question, Choice, User, Vote
-from django.template import loader
 from django.urls import reverse
 from django.views import generic
 
@@ -20,7 +18,7 @@ def registration(request):
         if form.is_valid():
             user = form.save()
             login(request, user)
-            return HttpResponseRedirect('/')
+            return redirect('/')
     else:
         form = RegistrationForm()
 
@@ -34,12 +32,12 @@ def profile_view(request):
             user = request.user
             user.delete()
             logout(request)
-            return HttpResponseRedirect('/')
+            return redirect('/')
         else:
             form = ProfileUpdateForm(request.POST, request.FILES, instance=request.user)
             if form.is_valid():
                 form.save()
-                return redirect('polls:profile')
+                return redirect('/')
     else:
         form = ProfileUpdateForm(instance=request.user)
     return render(request, 'polls/profile.html', {'form': form})
@@ -54,7 +52,6 @@ def create_poll_view(request):
         if poll_form.is_valid() and choice_form.is_valid():
             poll = poll_form.save(commit=False)
             poll.pub_date = timezone.now()
-            poll.save()
             poll.expires_at = timezone.now() + timedelta(hours=12)
             poll.save()
 
@@ -74,7 +71,7 @@ def create_poll_view(request):
     })
 
 
-class PollsListView(generic.ListView):
+class PollsListView(LoginRequiredMixin, generic.ListView):
     template_name = 'polls/index.html'
     context_object_name = 'latest_question_list'
 
@@ -82,12 +79,12 @@ class PollsListView(generic.ListView):
         if self.request.user.is_superuser:
             return Question.objects.order_by('-pub_date')
         else:
-            return Question.objects.filter(expires_at__isnull=True).exclude(
-                expires_at__lt=timezone.now()
+            return Question.objects.filter(
+                expires_at__gt=timezone.now()
             ).order_by('-pub_date')
 
 
-class DetailView(generic.DetailView):
+class DetailView(LoginRequiredMixin, generic.DetailView):
     model = Question
     template_name = 'polls/detail.html'
 
@@ -95,12 +92,21 @@ class DetailView(generic.DetailView):
         if self.request.user.is_superuser:
             return Question.objects.all()
         else:
-            return Question.objects.filter(expires_at__isnull=True).exclude(
-                expires_at__lt=timezone.now()
+            return Question.objects.filter(
+                expires_at__gt=timezone.now()
             )
 
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
 
-class ResultsView(generic.DetailView):
+        if Vote.objects.filter(user=request.user, question=self.object).exists():
+            return redirect('polls:results', pk=self.object.pk)
+
+        context = self.get_context_data(object=self.object)
+        return self.render_to_response(context)
+
+
+class ResultsView(LoginRequiredMixin, generic.DetailView):
     model = Question
     template_name = 'polls/results.html'
 
@@ -148,17 +154,9 @@ def vote(request, question_id):
             'error_message': 'вы не сделали выбор'
         })
 
-    try:
-        old_vote = Vote.objects.get(user=request.user, question=question)
-        old_vote.choice.votes -= 1
-        old_vote.choice.save()
-        old_vote.delete()
-    except Vote.DoesNotExist:
-        pass
-
     selected_choice.votes += 1
     selected_choice.save()
 
     Vote.objects.create(user=request.user, question=question, choice=selected_choice)
 
-    return HttpResponseRedirect(reverse('polls:results', args=(question.id,)))
+    return redirect(reverse('polls:results', args=(question.id,)))
